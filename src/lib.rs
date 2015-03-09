@@ -1,6 +1,9 @@
 #![feature(collections, core, old_io, old_path, rustc_private)]
 #![cfg_attr(not(test), feature(exit_status))] // we don't need exit_status feature when testing
 #![cfg_attr(test, feature(test))] // we only need test feature when testing
+#![crate_name = "racer"]
+#![crate_type = "lib"]
+#![crate_type = "rlib"]
 
 
 #[macro_use] extern crate log;
@@ -54,8 +57,7 @@ fn match_fn(m:Match) {
 }
 
 #[cfg(not(test))]
-fn complete(match_found : &Fn(Match)) {
-    let args: Vec<String> = std::env::args().collect();
+fn complete(args: &Vec<String>, match_found : &Fn(Match)) {
     if args.len() < 3 {
         println!("Provide more arguments!");
         print_usage();
@@ -104,8 +106,7 @@ fn complete(match_found : &Fn(Match)) {
 }
 
 #[cfg(not(test))]
-fn prefix() {
-    let args: Vec<String> = std::env::args().collect();
+fn prefix(args: &Vec<String>) {
     if args.len() < 5 {
         println!("Provide more arguments!");
         print_usage();
@@ -124,8 +125,7 @@ fn prefix() {
 }
 
 #[cfg(not(test))]
-fn find_definition() {
-    let args: Vec<String> = std::env::args().collect();
+fn find_definition(args: &Vec<String>) {
     if args.len() < 5 {
         println!("Provide more arguments!");
         print_usage();
@@ -154,14 +154,12 @@ fn print_usage() {
 
 
 #[cfg(not(test))]
-fn main() {
+pub fn racer_main(args: &Vec<String>) {
     if std::env::var("RUST_SRC_PATH").is_err() {
         println!("RUST_SRC_PATH environment variable must be set");
         std::env::set_exit_status(1);
         return;
     }
-
-    let args: Vec<String> = std::env::args().collect();
 
     if args.len() == 1 {
         print_usage();
@@ -171,10 +169,10 @@ fn main() {
 
     let command = &args[1][..];
     match command {
-        "prefix" => prefix(),
-        "complete" => complete(&match_fn),
-        "complete-with-snippet" => complete(&match_with_snippet_fn),
-        "find-definition" => find_definition(),
+        "prefix" => prefix(&args),
+        "complete" => complete(&args, &match_fn),
+        "complete-with-snippet" => complete(&args, &match_with_snippet_fn),
+        "find-definition" => find_definition(&args),
         "help" => print_usage(),
         cmd => {
             println!("Sorry, I didn't understand command {}", cmd);
